@@ -1,7 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// getch是一個windows系統下才擁有的語法
+//而我所使用的為GCC 9.4.0
+//因此無法編譯
+
 /*
+程式源碼參考自
+http://ant.comm.ccu.edu.tw/course/96_Data_Structure/9_Upload/HW4/HW4_495430019.c
 1) 程式名稱說明  : 二元搜尋樹
 2) 參數說明     :
 
@@ -23,18 +29,18 @@
 
 */
 
-typedef struct tree
+typedef struct tree //二元樹節點宣告
 {
     int data;
-    struct tree *left, *right;
+    struct tree *left, *right; //分別指向左右樹的子指標
 } tn, *bst;
 
 bst root = NULL;
-void insert(int d);
-int search(int d);
-bst delete (int d);
-void inorder(bst ptr);
-int print(bst ptr);
+void insert(int d);    //插入新一筆資料
+int search(int d);     //搜尋節點
+bst deletet(int d);    //刪除節點
+void inorder(bst ptr); //中序走訪
+int print(bst ptr);    //將樹印出
 
 int main(int argc, char *argv[])
 {
@@ -62,13 +68,13 @@ int main(int argc, char *argv[])
                 insert(data);
                 printf("\n\n按任意鍵返回主選單");
             }
-            getch(con);
+            getch(con); //按任意鍵返回主選單
             break;
 
         case 2:
             printf("請輸入想要刪除的值 : ");
-            scnaf("%d", &data);
-            delete (data);
+            scanf("%d", &data);
+            deletet(data);
             printf("\n\n按任意鍵返回主選單");
             getch(con);
             break;
@@ -87,6 +93,7 @@ int main(int argc, char *argv[])
             print(root);
             printf(")\n\n");
             printf("\n\n按任意鍵返回主選單");
+            getch(con);
             break;
         case 5:
             inorder(root);
@@ -157,6 +164,175 @@ void insert(int d)
                     now = now->right; //右子樹
                 }
             }
+        }
+    }
+}
+
+int search(int d)
+{
+    bst ptr = root;
+    while (ptr != NULL)
+    {
+        if (ptr->data == d) //找到所要尋找的值
+        {
+            return 1;
+        }
+        else
+        {
+            if (ptr->data > d) //比較資料
+                ptr = ptr->left;
+            else
+                ptr = ptr->right;
+        }
+    }
+
+    return 0;
+}
+
+bst deletet(int d)
+{
+    bst ptr, ptr_f, ptr_c;
+    int find = 0;       //是否找到刪除節點
+    ptr_f = ptr = root; //找尋刪除節點和其父節點指標
+    while (ptr != NULL && !find)
+    {
+        if (ptr->data == d)
+        {
+            find = 1; //找到刪除節點
+        }
+        else
+        {
+            ptr_f = ptr;       //保留父節點指標
+            if (ptr->data > d) //比較資料
+                ptr = ptr->left;
+            else
+                ptr = ptr->right;
+        }
+    }
+
+    if (ptr == NULL) //沒有找到刪除節點
+    {
+        printf("\n欲刪除的值不存在");
+        return;
+    }
+    if (ptr->left == NULL && ptr->right == NULL && ptr == root) //只剩根節點, 並且刪掉根節點
+    {
+        root = NULL;
+        ptr = NULL;
+        printf("\n欲刪除的值已刪除");
+        return;
+    }
+    if (ptr->left == NULL && ptr->right == NULL && ptr == root) //刪除二元搜尋樹的葉節點
+    {
+        if (ptr_f->left)
+            ptr_f->left = NULL;
+        else
+            ptr_f->right = NULL;
+        ptr = NULL; //釋放記憶體
+        printf("\n欲刪除的值已刪除");
+        return;
+    }
+    if (ptr->left == NULL) //沒有左子樹
+    {
+        if (ptr_f != ptr) //相等為根節點
+        {
+            if (ptr_f->left == ptr)
+            {
+                ptr_f->left = NULL;
+            }
+            else
+            {
+                ptr_f->right = NULL;
+            }
+        }
+        else
+        {
+            root = root->right; //根節點指向右子節點
+        }
+        ptr = NULL;
+        printf("\n欲刪除的值已刪除");
+        return;
+    }
+    if (ptr->right == NULL) //  沒有右子樹
+    {
+        if (ptr_f != ptr) //相等為根節點
+        {
+            if (ptr_f->right == ptr)
+            {
+                ptr_f->right = ptr->left;
+            }
+            else
+            {
+                ptr_f->left = ptr->left;
+            }
+        }
+        else
+        {
+            root = root->left; //  根節點指向左子節點
+        }
+        ptr = NULL;
+        printf("\n欲刪除的值已刪除");
+        return;
+    }
+    //有左子樹和右子樹
+    ptr_f = ptr;                 //父節點指向刪除節點
+    ptr_c = ptr->left;           //設定成左子節點
+    while (ptr_c->right != NULL) //找到最右的葉節點
+    {
+        ptr_f = ptr_c;        //保留父節點指標
+        ptr_c = ptr_c->right; //往右子樹走
+    }
+    ptr->data = ptr_c->data;  //設定成葉節點資料
+    if (ptr_f->left == ptr_c) //子節點沒有右子樹
+        ptr_f->left = ptr_c->left;
+    else
+        ptr_f->right = ptr_c->left;
+    ptr_c = NULL;
+    printf("\n欲刪除的值已刪除");
+    return;
+}
+
+void inorder(bst ptr)
+{
+    if (ptr != NULL)
+    {
+        inorder(ptr->left);
+        printf("%d", ptr->data);
+        inorder(ptr->right);
+    }
+}
+
+int print(bst ptr)
+{
+    if (ptr == NULL) //若樹為空的
+    {
+        return 0;
+    }
+    else
+    {
+        printf("%d", ptr->data); //走訪到的元素先印出來
+                                 //再依照前序走訪的方式加上括號和逗號
+        if (ptr->left)           //左邊有元素
+        {
+            printf("(");
+            print(ptr->left);
+        }
+        else if (ptr->left == NULL) //左邊走到底了, 再往右邊走
+        {
+            if (ptr->right)
+                printf("(");
+        }
+        if (ptr->right) //右邊有元素
+        {
+            if (ptr->left)
+                printf(",");
+            print(ptr->right);
+            printf(")");
+        }
+        else if (ptr->right == NULL) //右邊走到底了, 再往左邊走
+        {
+            if (ptr->left)
+                printf(")");
         }
     }
 }
